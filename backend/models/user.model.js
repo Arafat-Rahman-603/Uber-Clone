@@ -32,7 +32,7 @@ userSchema.methods.matchPassword = async function(password){
 }
 
 userSchema.methods.generateToken = function(){
-    return jwt.sign({id: this._id}, process.env.JWT_SECRET);
+    return jwt.sign({id: this._id}, process.env.JWT_SECRET,{expiresIn: "7d"});
 }
 
 userSchema.statics.hashPassword = async function(password){

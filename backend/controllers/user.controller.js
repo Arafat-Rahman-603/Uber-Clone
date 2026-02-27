@@ -1,5 +1,6 @@
 import userModel from "../models/user.model.js";
 import { validationResult } from "express-validator";
+import blacklistTokenModel from "../models/blacklistToken.model.js";
 
 export const registerUser = async (req, res, next) => {
   const errors = validationResult(req);
@@ -8,6 +9,11 @@ export const registerUser = async (req, res, next) => {
   }
 
   const { fullName, email, password } = req.body;
+
+   const userExists = await userModel.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: "User already exists" });
+        }
 
   if (!fullName || !email || !password) {
     return res.status(400).json({ message: "All fields are required" });
@@ -23,6 +29,7 @@ export const registerUser = async (req, res, next) => {
   });
 
   const token = user.generateToken();
+  res.cookie("token", token);
   res
     .status(201)
     .json({ message: "User registered successfully", user, token });
@@ -49,6 +56,8 @@ export const loginUser = async(req,res,next) => {
 
       const token = user.generateToken();
 
+      res.cookie("token", token);
+      
       res.status(200).json({message: "User logged in successfully", user, token});
 
 }
@@ -56,4 +65,19 @@ export const loginUser = async(req,res,next) => {
 export const getUserProfile = async(req,res,next) => {
     const user = req.user;
     res.status(200).json({message: "User profile fetched successfully", user});
+}
+
+export const logoutUser = async(req,res,next) => {
+    res.clearCookie("token");
+
+    let token;
+    if(req.cookies.token){
+        token = req.cookies.token;
+    }else{
+        token = req.headers.authorization.split(" ")[ 1 ] || req.cookies.token;
+    }
+    
+    await blacklistTokenModel.create({token});
+    
+    res.status(200).json({message: "User logged out successfully!"});
 }
