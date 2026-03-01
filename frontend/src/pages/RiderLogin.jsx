@@ -1,18 +1,32 @@
 import React, { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { FaRegEye } from "react-icons/fa6";
 import { FaRegEyeSlash } from "react-icons/fa6";
 import { FaArrowRight } from "react-icons/fa";
+import axios from 'axios';
+import { useRiderStore } from '../../store/riderStore';
 
 export default function RiderLogin() {
+
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const [hidepassword, setHidePassword] = useState(false);
+  const navigate = useNavigate();
+  const setRider = useRiderStore((state) => state.setRider);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(emailRef.current.value, passwordRef.current.value);
+    const riderLoginData = {
+      email: emailRef.current.value,
+      password: passwordRef.current.value
+    }
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/riders/login`, riderLoginData);
+    if(response.status === 201){
+      localStorage.setItem('token', response.data.token);
+      setRider(response.data.rider);
+      navigate('/home');
+    }
   };
 
   return (
@@ -50,13 +64,6 @@ export default function RiderLogin() {
           <FaArrowRight className=''/>
         </button>
       </form>
-    </div>
-        <div className="flex items-center gap-2 px-4 justify-center">
-      <hr className='border-2 border-gray-200 w-1/2'/>
-      <p className="text-[1rem] pb-1 font-bold text-gray-400">
-        or
-      </p>
-      <hr className='border-2 border-gray-200 w-1/2'/>
     </div>
     <div className="absolute bottom-4 w-full p-4">
         <Link 

@@ -2,11 +2,14 @@ import React from 'react'
 import { FaRegEye } from "react-icons/fa6";
 import { FaArrowRight } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa6";
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useRef } from 'react'
 import { useState } from 'react'
+import { useUserStore } from '../../store/userStore';
+import axios from 'axios';
 
 export default function UserSignup() {
+
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
@@ -14,14 +17,32 @@ export default function UserSignup() {
   const confirmPasswordRef = useRef(null);
   const [hidepassword, setHidePassword] = useState(false);
   const [hideconfirmPassword, setHideConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+  const setUser = useUserStore((state) => state.setUser);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if(passwordRef.current.value !== confirmPasswordRef.current.value){
       alert("Passwords do not match");
       return;
     }
-    console.log(firstNameRef.current.value, lastNameRef.current.value, emailRef.current.value, passwordRef.current.value);
+
+    const userSignupData = {
+      fullName:{
+        firstName: firstNameRef.current.value,
+        lastName: lastNameRef.current.value,
+      },
+      email: emailRef.current.value,
+      password: passwordRef.current.value
+    }
+   
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/users/register`, userSignupData);
+    if(response.status === 201){
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      navigate('/home');
+    }
   };
 
   return (

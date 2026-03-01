@@ -1,22 +1,41 @@
 import React, { useRef } from 'react'
 import { useState } from 'react'
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import { FaRegEye } from "react-icons/fa6";
 import { FaRegEyeSlash } from "react-icons/fa6";
 import { FaArrowRight } from "react-icons/fa";
+import { useUserStore } from '../../store/userStore';
+import axios from 'axios';
+
+
 export default function UserLogin() {
+  
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const [hidepassword, setHidePassword] = useState(false);
+  const navigate = useNavigate();
+  const setUser = useUserStore((state) => state.setUser);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+
     e.preventDefault();
-    console.log(emailRef.current.value, passwordRef.current.value);
+
+    const userLoginData = {
+      email: emailRef.current.value,
+      password: passwordRef.current.value
+    }
+    
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, userLoginData);
+    if(response.status === 200){
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      navigate('/home');
+    }
   };
 
   return (
     <>
-    <div className='w-full h-screen flex-col flex px-4 pt-8 pb-4 h-max '>
+    <div className='w-full h-[60vh] flex-col flex px-4 pt-8 pb-4 h-max '>
       <form onSubmit={handleSubmit}>
         <p className="text-[1.5rem] font-bold">
           What's your email?

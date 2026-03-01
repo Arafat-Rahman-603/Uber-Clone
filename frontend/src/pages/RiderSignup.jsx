@@ -1,11 +1,16 @@
 import React, { useState } from 'react'
 import { FaRegEye, FaRegEyeSlash, FaArrowRight, FaArrowLeft } from "react-icons/fa";
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios';
+import { useRiderStore } from '../../store/riderStore';
 
 export default function RiderSignup() {
+
+  const setRider = useRiderStore((state) => state.setRider);
   const [step, setStep] = useState(1);
   const [hidepassword, setHidePassword] = useState(false);
   const [hideconfirmPassword, setHideConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -26,13 +31,35 @@ export default function RiderSignup() {
   const handleNext = () => setStep(prev => prev + 1);
   const handlePrev = () => setStep(prev => prev - 1);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if(formData.password !== formData.confirmPassword){
       alert("Passwords do not match");
       return;
     }
-    console.log("Signup Data:", formData);
+
+    const riderSignupData ={
+      fullName:{
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      },
+      email: formData.email,
+      password: formData.password,
+      vehicle:{
+        vehicleNumber: formData.vehicleNumber,
+        vehicleType: formData.vehicleType,
+        vehicleColor: formData.vehicleColor,
+        vehicleCapacity: formData.vehicleCapacity,
+      }
+    }
+
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/riders/register`, riderSignupData);
+    if(response.status === 201){
+      localStorage.setItem('token', response.data.token);
+      setRider(response.data.rider);
+      navigate('/home');
+    }
   };
 
   return (
