@@ -9,6 +9,7 @@ import RiderSignup from './pages/RiderSignup'
 import UserLogout from './pages/UserLogout'
 import RiderLogout from './pages/RiderLogout'
 import UserProtectedCom from './pages/UserProtectedCom'
+import Rideing from './pages/Rideing'
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <RiderLogout />
         </UserProtectedCom>
       } />
+      <Route path='/rideing' element={<Rideing />} />
     </Routes>
     </>
   ) 
