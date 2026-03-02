@@ -1,15 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
-export default function UserProtectedCom({ children }) {
-const token = localStorage.getItem("token");
+export default function RiderProtectedCom({ children }) {
+  const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkRider = async () => {
       if (!token) {
         setLoading(false);
         return;
@@ -17,7 +16,7 @@ const token = localStorage.getItem("token");
 
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/users/profile`,
+          `${import.meta.env.VITE_API_URL}/riders/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -25,7 +24,7 @@ const token = localStorage.getItem("token");
           }
         );
 
-        if(res.data.user){
+        if(res.data.rider){
           setIsAuthorized(true);
         }
       } catch (error) {
@@ -37,7 +36,7 @@ const token = localStorage.getItem("token");
       }
     };
 
-    checkUser();
+    checkRider();
   }, [token]);
 
   if (loading) return  <div className="flex justify-center items-center h-screen">

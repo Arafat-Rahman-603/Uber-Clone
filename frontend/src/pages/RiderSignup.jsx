@@ -34,6 +34,8 @@ export default function RiderSignup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log(formData)
+
     if(formData.password !== formData.confirmPassword){
       alert("Passwords do not match");
       return;
@@ -49,8 +51,8 @@ export default function RiderSignup() {
       vehicle:{
         vehicleNumber: formData.vehicleNumber,
         vehicleType: formData.vehicleType,
-        vehicleColor: formData.vehicleColor,
-        vehicleCapacity: formData.vehicleCapacity,
+        color: formData.vehicleColor,
+        capacity: Number(formData.vehicleCapacity),
       }
     }
 

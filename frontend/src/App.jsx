@@ -10,6 +10,8 @@ import UserLogout from './pages/UserLogout'
 import RiderLogout from './pages/RiderLogout'
 import UserProtectedCom from './pages/UserProtectedCom'
 import Rideing from './pages/Rideing'
+import RiderHome from './pages/RiderHome'
+import RiderProtectedCom from './components/RiderProtectedCom'
 
 function App() {
   return (
@@ -31,11 +33,16 @@ function App() {
       <Route path='/rider/login' element={<RiderLogin />} />
       <Route path='/rider/signup' element={<RiderSignup />} />
       <Route path='/rider/logout' element={
-        <UserProtectedCom>
+        <RiderProtectedCom>
           <RiderLogout />
-        </UserProtectedCom>
+        </RiderProtectedCom>
       } />
       <Route path='/rideing' element={<Rideing />} />
+      <Route path='/rider/home' element={
+        <RiderProtectedCom>
+          <RiderHome />
+        </RiderProtectedCom>
+      } />
     </Routes>
     </>
   ) 

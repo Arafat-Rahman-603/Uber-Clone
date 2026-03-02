@@ -5,7 +5,7 @@ import { authMiddlewareRider } from "../middlewares/auth.middleware.js";
 
 const riderRouter = express.Router();
 
-riderRouter.post("/register",registerRiderValidation, registerRider);
+riderRouter.post("/register", registerRiderValidation, registerRider);
 riderRouter.post("/login", loginRiderValidation, loginRider);
 riderRouter.get("/logout", logout);
 riderRouter.get("/profile",authMiddlewareRider, getProfile);
