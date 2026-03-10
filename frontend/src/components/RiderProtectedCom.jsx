@@ -9,6 +9,7 @@ export default function RiderProtectedCom({ children }) {
 
   useEffect(() => {
     const checkRider = async () => {
+
       if (!token) {
         setLoading(false);
         return;

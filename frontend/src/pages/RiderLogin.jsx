@@ -22,10 +22,10 @@ export default function RiderLogin() {
       password: passwordRef.current.value
     }
     const response = await axios.post(`${import.meta.env.VITE_API_URL}/riders/login`, riderLoginData);
-    if(response.status === 201){
+    if(response.status === 200){
       localStorage.setItem('token', response.data.token);
       setRider(response.data.rider);
-      navigate('/home');
+      navigate('/rider/home');
     }
   };
 

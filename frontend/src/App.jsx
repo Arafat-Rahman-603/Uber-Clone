@@ -12,6 +12,7 @@ import UserProtectedCom from './pages/UserProtectedCom'
 import Rideing from './pages/Rideing'
 import RiderHome from './pages/RiderHome'
 import RiderProtectedCom from './components/RiderProtectedCom'
+import RiderRideing from './pages/RiderRideing'
 
 function App() {
   return (
@@ -37,10 +38,19 @@ function App() {
           <RiderLogout />
         </RiderProtectedCom>
       } />
-      <Route path='/rideing' element={<Rideing />} />
+      <Route path='/user/rideing' element={
+        <UserProtectedCom>
+        <Rideing />
+        </UserProtectedCom>
+        } />
       <Route path='/rider/home' element={
         <RiderProtectedCom>
           <RiderHome />
+        </RiderProtectedCom>
+      } />
+      <Route path='/rider/rideing' element={
+        <RiderProtectedCom>
+          <RiderRideing/>
         </RiderProtectedCom>
       } />
     </Routes>
