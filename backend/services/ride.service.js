@@ -1,5 +1,6 @@
 import Ride from "../models/ride.model.js";
 import { getDistanceTime } from "./map.service.js";
+import crypto from "crypto";
 
 const PRICING_RULES = {
   auto: {
@@ -29,12 +30,13 @@ const calculateModePrice = (distance, duration, mode) => {
 };
 
 export const createRide = async (rideData) => {
+  console.log("CreaterideData", rideData);
   const { pickupLocation, dropoffLocation, vehicleType = "car" } = rideData;
   const { distance, duration } = await getDistanceTime(
     pickupLocation,
     dropoffLocation,
   );
-
+ 
   const autoPrice = calculateModePrice(distance, duration, "auto");
   const carPrice = calculateModePrice(distance, duration, "car");
   const bikePrice = calculateModePrice(distance, duration, "bike");
@@ -54,7 +56,9 @@ export const createRide = async (rideData) => {
     pickupLocation,
     dropoffLocation,
     price: selectedPrice,
+    otp: generateOTP(),
   });
+  console.log("ride", ride);
   await ride.save();
   return {
     ride,
@@ -64,4 +68,12 @@ export const createRide = async (rideData) => {
       bike: bikePrice,
     },
   };
+};
+
+export const generateOTP = () => {
+  const min = 100000; // smallest 6-digit number
+  const max = 999999; // largest 6-digit number
+
+  const otp = crypto.randomInt(min, max + 1); // secure random integer
+  return otp.toString();
 };

@@ -1,29 +1,29 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function RiderLogout() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-    const navigate = useNavigate();
-    const token = localStorage.getItem('token');
+  if (token) {
+    handleLogout();
+  }
 
-    if(token){
-        handleLogout();
+  const handleLogout = async () => {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/riders/logout`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (response.status === 200) {
+      localStorage.removeItem("token");
+      navigate("/rider/login");
     }
+  };
 
-    const handleLogout = async () => {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/riders/logout`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        if(response.status === 200){
-            localStorage.removeItem('token');
-            navigate('/rider/login');
-        }
-    }   
-
-  return (
-    <div></div>
-  )
+  return <div></div>;
 }

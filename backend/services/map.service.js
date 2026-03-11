@@ -1,55 +1,76 @@
 import axios from "axios";
 
 export const gateAddressCordinate = async (address) => {
-  const response = await axios.get(
-    "https://nominatim.openstreetmap.org/search",
-    {
-      params: {
-        q: address,
-        format: "json",
-        limit: 1
-      },
-      headers: {
-        "User-Agent": "uber-clone-app"
+  
+  try {
+    const response = await axios.get(
+      "https://nominatim.openstreetmap.org/search",
+      {
+        params: {
+          q: address,
+          format: "json",
+          limit: 1
+        },
+        headers: {
+          "User-Agent": "uber-clone-app" // required by Nominatim
+        }
       }
+    );
+
+    const data = response.data;
+
+    if (!data || data.length === 0) {
+      throw new Error("Address not found");
     }
-  );
 
-  const data = response.data;
+    return {
+      lat: parseFloat(data[0].lat),
+      lng: parseFloat(data[0].lon)
+    };
 
-  if (!data || data.length === 0) {
-    throw new Error("Address not found");
+  } catch (error) {
+    console.error("Geocoding error:", error.message);
+    throw error;
   }
-
-  return {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon)
-  };
 };
 
 export const getDistanceTime = async (origin, destination) => {
-
-  const response = await axios.get(
-    `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}`,
-    {
-      params: {
-        overview: false
-      }
+ 
+  try {
+    if (!origin || !destination) {
+      throw new Error("Origin or destination missing");
     }
-  );
 
-  const data = response.data;
+    
+    const originLngLat = await gateAddressCordinate(origin);
+    const destinationLngLat = await gateAddressCordinate(destination);
 
-  if (!data.routes || data.routes.length === 0) {
-    throw new Error("Route not found");
+    const response = await axios.get(
+      `https://router.project-osrm.org/route/v1/driving/${originLngLat.lng},${originLngLat.lat};${destinationLngLat.lng},${destinationLngLat.lat}`,
+      {
+        params: {
+          overview: "false"
+        }
+      }
+    );
+
+    const data = response.data;
+  
+    if (!data.routes || data.routes.length === 0) {
+      throw new Error("Route not found");
+    }
+
+    const route = data.routes[0];
+
+    return {
+      distance: route.distance, // meters
+      duration: route.duration  // seconds
+    };
+
+  } catch (error) {
+    console.error("Error getting distance and time:", error.message);
+    throw error;
   }
-
-  const route = data.routes[0];
-
-  return {
-    distance: route.distance,
-    duration: route.duration
-  };
 };
 
 export const searchPlaces = async (query) => {

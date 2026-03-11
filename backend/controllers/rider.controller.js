@@ -68,24 +68,24 @@ export const loginRider = async (req, res) => {
   }
 };
 
-export const logout = async (req,res) => {
-    // res.clearCookie("token");
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-    if (token) {
-      await blacklistTokenModel.create({ 
-        token, 
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) 
-      });
-    }
-    res.status(200).json({ message: "Logged out successfully" });
-} 
+export const logout = async (req, res) => {
+  // res.clearCookie("token");
+  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+  if (token) {
+    await blacklistTokenModel.create({
+      token,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+  }
+  res.status(200).json({ message: "Logged out successfully" });
+};
 
 export const getProfile = async (req, res) => {
-    console.log("req.rider", req.rider);
-    try {
-        const rider = await riderModel.findById(req.rider._id);
-        res.status(200).json({ rider });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-}
+  console.log("req.rider", req.rider);
+  try {
+    const rider = await riderModel.findById(req.rider._id);
+    res.status(200).json({ rider });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

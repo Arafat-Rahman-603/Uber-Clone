@@ -9,7 +9,6 @@ const rideSchema = new mongoose.Schema({
     rider:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Rider',
-        required:true,
     },
     pickupLocation:{
         type:String,
@@ -33,20 +32,21 @@ const rideSchema = new mongoose.Schema({
     },
     paymentId:{
         type:String,
-        required:true,
     },
     orderId:{
         type:String,
-        required:true,
     },
     signature:{
         type:String,
-        required:true,
     },
     status:{
         type:String,
         enum:['pending','accepted','ongoing','completed','cancelled'],
         default:'pending',
+    },
+    otp:{
+        type:String,
+        select:false,
     },
   
 });

@@ -28,6 +28,8 @@ export const createRideController = async (req, res) => {
       vehicleType,
     };
 
+    console.log(rideData);
+
     const result = await createRide(rideData);
 
     return res.status(201).json(result);

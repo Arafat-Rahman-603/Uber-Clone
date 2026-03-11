@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 export default function UserProtectedCom({ children }) {
-const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -22,10 +22,10 @@ const token = localStorage.getItem("token");
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
-        if(res.data.user){
+        if (res.data.user) {
           setIsAuthorized(true);
         }
       } catch (error) {
@@ -40,10 +40,12 @@ const token = localStorage.getItem("token");
     checkUser();
   }, [token]);
 
-  if (loading) return  <div className="flex justify-center items-center h-screen">
-      <div className="w-10 h-10 border-4 border-[#EBBE4D] border-t-black rounded-full animate-spin"></div>
-    </div>
-;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-10 h-10 border-4 border-[#EBBE4D] border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
 
   if (!token || !isAuthorized) {
     return <Navigate to="/" replace />;

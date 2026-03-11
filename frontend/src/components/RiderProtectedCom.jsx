@@ -9,7 +9,6 @@ export default function RiderProtectedCom({ children }) {
 
   useEffect(() => {
     const checkRider = async () => {
-
       if (!token) {
         setLoading(false);
         return;
@@ -22,10 +21,10 @@ export default function RiderProtectedCom({ children }) {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
-        if(res.data.rider){
+        if (res.data.rider) {
           setIsAuthorized(true);
         }
       } catch (error) {
@@ -40,10 +39,12 @@ export default function RiderProtectedCom({ children }) {
     checkRider();
   }, [token]);
 
-  if (loading) return  <div className="flex justify-center items-center h-screen">
-      <div className="w-10 h-10 border-4 border-[#EBBE4D] border-t-black rounded-full animate-spin"></div>
-    </div>
-;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-10 h-10 border-4 border-[#EBBE4D] border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
 
   if (!token || !isAuthorized) {
     return <Navigate to="/" replace />;
