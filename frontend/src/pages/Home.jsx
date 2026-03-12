@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { IoIosArrowDown } from "react-icons/io";
 import RideOption from "../components/RideOption";
 import ConfirmedRide from "../components/ConfirmedRide";
@@ -7,8 +8,11 @@ import WaitingForDriverCon from "../components/WaitingForDriverCon";
 import WaitingForRide from "../components/WaitingForRide";
 
 export default function Home() {
-  const pickupRef = useRef(null);
-  const destinationRef = useRef(null);
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const [activeField, setActiveField] = useState(null);
 
   const [openPanel, setOpenPanel] = useState(false);
   const [showRideOptions, setShowRideOptions] = useState(false);
@@ -25,11 +29,39 @@ export default function Home() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!pickupRef.current.value || !destinationRef.current.value) return;
+    if (!pickup || !destination) return;
 
     setOpenPanel(false);
     closeAllPanels();
     setShowRideOptions(true);
+  };
+
+  const handlePickupChange = async (e) => {
+    setPickup(e.target.value);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/map/search?input=${e.target.value}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setPickupSuggestions(response.data);
+    } catch (error) {
+      console.log("Error fetching pickup suggestions:", error);
+    }
+  };
+
+  const handleDestinationChange = async (e) => {
+    setDestination(e.target.value);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/map/search?input=${e.target.value}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setDestinationSuggestions(response.data);
+    } catch (error) {
+      console.log("Error fetching destination suggestions:", error);
+    }
   };
 
   return (
@@ -71,22 +103,36 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-4">
               <input
-                ref={pickupRef}
+                value={pickup}
+                onChange={handlePickupChange}
+                onClick={() => setActiveField('pickup')}
                 type="text"
                 placeholder="Enter pick-up location"
                 className="bg-gray-100 rounded-lg p-3"
               />
               <input
-                ref={destinationRef}
+                value={destination}
+                onChange={handleDestinationChange}
+                onClick={() => setActiveField('destination')}
                 type="text"
                 placeholder="Enter destination"
                 className="bg-gray-100 rounded-lg p-3"
               />
+              <button 
+                type="submit" 
+                className="bg-black text-white px-4 py-2 rounded-lg mt-3 w-full"
+              >
+                Find Trip
+              </button>
             </form>
 
             <LocationSearchPanel
+              suggestions={activeField === 'pickup' ? pickupSuggestions : destinationSuggestions}
               setOpenPanel={setOpenPanel}
               setShowRideOptions={setShowRideOptions}
+              setPickup={setPickup}
+              setDestination={setDestination}
+              activeField={activeField}
             />
           </div>
         )}
