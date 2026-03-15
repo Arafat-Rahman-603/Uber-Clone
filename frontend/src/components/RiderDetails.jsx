@@ -1,6 +1,16 @@
 import React from 'react'
+import { useRiderStore } from '../../store/riderStore'
 
 export default function RiderDetails() {
+  let riderData;
+  const rider = useRiderStore((state) => state.rider);
+
+  if(!rider){
+    riderData = JSON.parse(localStorage.getItem("rider"));
+  }else{
+    riderData = rider;
+  }
+  
   return (
     <div className="absolute h-[35%] bottom-0 w-full bg-white p-5 shadow-2xl">
 
@@ -13,7 +23,9 @@ export default function RiderDetails() {
               className="w-12 h-12 rounded-full"
             />
             <div>
-              <p className="font-semibold">Harsh Patel</p>
+              <p className="font-semibold">
+                {riderData.fullName.firstName} {riderData.fullName.lastName}
+              </p>
             </div>
           </div>
 

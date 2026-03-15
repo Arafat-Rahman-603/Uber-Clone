@@ -1,4 +1,5 @@
 import axios from "axios";
+import riderModel from "../models/rider.model.js";
 
 export const gateAddressCordinate = async (address) => {
   
@@ -97,4 +98,17 @@ export const searchPlaces = async (query) => {
     lat: place.lat,
     lng: place.lon
   }));
+};
+
+export const getRiderInRadius = async (lat,lng,radius) => {
+  const response = await axios.get(
+    `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}`,
+    {
+      params: {
+        radius: radius,
+        number: 10
+      }
+    }
+  );
+  return response.data;
 };

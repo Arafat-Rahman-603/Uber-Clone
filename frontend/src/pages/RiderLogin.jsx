@@ -27,6 +27,7 @@ export default function RiderLogin() {
     if (response.status === 200) {
       localStorage.setItem("token", response.data.token);
       setRider(response.data.rider);
+      localStorage.setItem("rider", JSON.stringify(response.data.rider));
       navigate("/rider/home");
     }
   };

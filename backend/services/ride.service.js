@@ -29,6 +29,28 @@ const calculateModePrice = (distance, duration, mode) => {
   return Math.round(price);
 };
 
+export const getFare = async (pickup, destination) => {
+  if (!pickup || !destination) {
+    throw new Error('Pickup and destination are required');
+  }
+
+  const { distance, duration } = await getDistanceTime(pickup, destination);
+
+  const autoPrice = calculateModePrice(distance, duration, "auto");
+  const carPrice = calculateModePrice(distance, duration, "car");
+  const bikePrice = calculateModePrice(distance, duration, "bike");
+
+  return {
+    distance,
+    duration,
+    prices: {
+      auto: autoPrice,
+      car: carPrice,
+      bike: bikePrice
+    }
+  };
+};
+
 export const createRide = async (rideData) => {
   console.log("CreaterideData", rideData);
   const { pickupLocation, dropoffLocation, vehicleType = "car" } = rideData;
@@ -55,7 +77,12 @@ export const createRide = async (rideData) => {
     duration,
     pickupLocation,
     dropoffLocation,
-    price: selectedPrice,
+    price: {
+      auto: autoPrice,
+      car: carPrice,
+      bike: bikePrice,
+      selected: selectedPrice,
+    },
     otp: generateOTP(),
   });
   console.log("ride", ride);

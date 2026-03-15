@@ -27,7 +27,7 @@ const rideSchema = new mongoose.Schema({
         required:true,
     },
     price:{
-        type:Number,
+        type:Object,
         required:true,
     },
     paymentId:{

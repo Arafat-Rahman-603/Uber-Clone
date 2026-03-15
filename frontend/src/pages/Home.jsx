@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import axios from "axios";
 import { IoIosArrowDown } from "react-icons/io";
 import RideOption from "../components/RideOption";
@@ -6,19 +6,37 @@ import ConfirmedRide from "../components/ConfirmedRide";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import WaitingForDriverCon from "../components/WaitingForDriverCon";
 import WaitingForRide from "../components/WaitingForRide";
+import { SocketContext } from "../context/SocketContext";
 
 export default function Home() {
+  const { socket } = useContext(SocketContext);
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
   const [activeField, setActiveField] = useState(null);
+  const [fareData, setFareData] = useState(null);
+  const [vehicleType, setVehicleType] = useState(null);
 
   const [openPanel, setOpenPanel] = useState(false);
   const [showRideOptions, setShowRideOptions] = useState(false);
   const [showConfirmedRide, setShowConfirmedRide] = useState(false);
   const [showWaitingForDriver, setShowWaitingForDriver] = useState(false);
   const [showWaitingForRide, setShowWaitingForRide] = useState(false);
+
+  const userId =  JSON.parse(localStorage.getItem('user'))._id;
+  useEffect(() => {
+
+  console.log(userId)
+  if (!userId) return;
+
+  socket.emit('join', {
+    userType: 'user',
+    userId
+  });
+
+}, [userId]);
+
 
   const closeAllPanels = () => {
     setShowRideOptions(false);
@@ -27,23 +45,40 @@ export default function Home() {
     setShowWaitingForRide(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!pickup || !destination) return;
 
-    setOpenPanel(false);
-    closeAllPanels();
-    setShowRideOptions(true);
+    try {
+      console.log(pickup,destination)
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/rides/create`, {
+        pickupLocation: pickup,
+        dropoffLocation: destination,
+        vehicleType: vehicleType || 'car'
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setFareData(response.data);
+      console.log("Fare data:", response.data);
+      
+      setOpenPanel(false);
+      closeAllPanels();
+      setShowRideOptions(true);
+    } catch (error) {
+      console.log("Error fetching fare:", error);
+    }
   };
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
     try {
+      if (e.target.value.length < 2) return;
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/map/search?input=${e.target.value}`, {
         headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
+
       setPickupSuggestions(response.data);
     } catch (error) {
       console.log("Error fetching pickup suggestions:", error);
@@ -157,12 +192,14 @@ export default function Home() {
         <RideOption
           setShowRideOptions={setShowRideOptions}
           setShowConfirmedRide={setShowConfirmedRide}
+          fareData={fareData}
+          setVehicleType={setVehicleType}
         />
       </div>
 
       {/* CONFIRMED RIDE */}
       <div
-        className={`absolute bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-xl z-40 transition-all duration-300 overflow-y-auto
+        className={`absolute bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-xl z-40 transition-all duration-300 overflow-y-auto overflow-x-hidden
         ${showConfirmedRide ? "h-[72%]" : "h-0"}`}
       >
         <IoIosArrowDown
@@ -176,6 +213,10 @@ export default function Home() {
         <ConfirmedRide
           setShowConfirmedRide={setShowConfirmedRide}
           setShowWaitingForDriver={setShowWaitingForDriver}
+          pickup={pickup}
+          destination={destination}
+          fareData={fareData}
+          vehicleType={vehicleType}
         />
       </div>
 
@@ -185,6 +226,8 @@ export default function Home() {
         ${showWaitingForDriver ? "h-[62%]" : "h-0 pointer-events-none"}`}
       >
         <WaitingForDriverCon
+          fareData={fareData}
+          vehicleType={vehicleType}
           setShowWaitingForDriver={setShowWaitingForDriver}
           setShowWaitingForRide={setShowWaitingForRide}
         />

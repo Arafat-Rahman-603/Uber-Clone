@@ -29,6 +29,7 @@ export default function UserLogin() {
     if (response.status === 200) {
       localStorage.setItem("token", response.data.token);
       setUser(response.data.user);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
       navigate("/home");
     }
   };

@@ -1,15 +1,50 @@
-import React, { useState } from 'react'
+import React, { useState,useContext,useEffect } from 'react'
 import { TbLogout } from "react-icons/tb";
 import { Link } from "react-router-dom"
 import RiderDetails from '../components/RiderDetails';
 import RidePopUp from '../components/RidePopUp';
 import GotoPickUp from '../components/GotoPickUp';
+import { SocketContext } from "../context/SocketContext";
 
 
 export default function RiderHome() {
 
+  const { socket } = useContext(SocketContext);
   const [ ridePopUp , setRidePopUp ] = useState(true);
   const [ gotoPickUp , setGotoPickUp ] = useState(true);
+
+  const userId =  JSON.parse(localStorage.getItem('rider'))._id;
+  useEffect(() => {
+
+  console.log(userId)
+  if (!userId) return;
+
+  socket.emit('join', {
+    userType: 'rider',
+    userId
+  });
+
+  const updateLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        console.log("Sending location:", position.coords.latitude, position.coords.longitude);
+        socket.emit('update-location-rider', {
+          userId: userId,
+          location: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        });
+      });
+    }
+  };
+
+  const locationInterval = setInterval(updateLocation, 15000);
+  updateLocation();
+
+  return () => clearInterval(locationInterval);
+
+}, [userId]);
 
 
   return (
