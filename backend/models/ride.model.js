@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 const rideSchema = new mongoose.Schema({
     user:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+        ref:'user',
         required:true,
     },
     rider:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Rider',
+        ref:'rider',
     },
     pickupLocation:{
         type:String,
@@ -39,9 +39,13 @@ const rideSchema = new mongoose.Schema({
     signature:{
         type:String,
     },
+    vehicleType:{
+        type:String,
+        enum:['bike','car','scooter','auto'],
+    },
     status:{
         type:String,
-        enum:['pending','accepted','ongoing','completed','cancelled'],
+        enum:['pending','confirmed','accepted','ongoing','completed','cancelled'],
         default:'pending',
     },
     otp:{
@@ -49,7 +53,7 @@ const rideSchema = new mongoose.Schema({
         select:false,
     },
   
-});
+}, { timestamps: true });
 
 const Ride = mongoose.model('Ride',rideSchema);
 

@@ -1,7 +1,6 @@
 import React from 'react'
-import { FiSearch } from "react-icons/fi";
 
-export default function RidePopUp({ setRidePopUp, rideData }) {
+export default function RidePopUp({ setRidePopUp, rideData, onAccept }) {
   if (!rideData) return null;
 
   return (
@@ -29,7 +28,7 @@ export default function RidePopUp({ setRidePopUp, rideData }) {
         <div className="text-right">
           <h3 className="font-semibold text-2xl">৳{rideData.price?.selected}</h3>
           <p className="text-sm text-gray-500">
-            {(rideData.distance / 1000).toFixed(1)} km
+            {rideData.distance ? (rideData.distance / 1000).toFixed(1) : '0'} km
           </p>
         </div>
       </div>
@@ -60,7 +59,10 @@ export default function RidePopUp({ setRidePopUp, rideData }) {
           Ignore
         </button>
         <button
-          onClick={() => setRidePopUp(false)}
+          onClick={() => {
+            if (onAccept) onAccept(rideData);
+            setRidePopUp(false);
+          }}
           className="bg-yellow-400 hover:bg-yellow-500 px-6 py-2 rounded-xl font-semibold"
         >
           Accept

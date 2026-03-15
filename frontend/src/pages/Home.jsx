@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { IoIosArrowDown } from "react-icons/io";
 import RideOption from "../components/RideOption";
@@ -17,6 +17,7 @@ export default function Home() {
   const [activeField, setActiveField] = useState(null);
   const [fareData, setFareData] = useState(null);
   const [vehicleType, setVehicleType] = useState(null);
+  const [availableVehicles, setAvailableVehicles] = useState(null);
 
   const [openPanel, setOpenPanel] = useState(false);
   const [showRideOptions, setShowRideOptions] = useState(false);
@@ -24,7 +25,7 @@ export default function Home() {
   const [showWaitingForDriver, setShowWaitingForDriver] = useState(false);
   const [showWaitingForRide, setShowWaitingForRide] = useState(false);
 
-  const userId =  JSON.parse(localStorage.getItem('user'))._id;
+  const userId = JSON.parse(localStorage.getItem('user'))._id;
   useEffect(() => {
 
   console.log(userId)
@@ -50,7 +51,7 @@ export default function Home() {
     if (!pickup || !destination) return;
 
     try {
-      console.log(pickup,destination)
+      console.log(pickup, destination)
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/rides/create`, {
         pickupLocation: pickup,
         dropoffLocation: destination,
@@ -59,7 +60,9 @@ export default function Home() {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setFareData(response.data);
+      setAvailableVehicles(response.data.availableVehicles);
       console.log("Fare data:", response.data);
+      console.log("Available vehicles:", response.data.availableVehicles);
       
       setOpenPanel(false);
       closeAllPanels();
@@ -194,6 +197,7 @@ export default function Home() {
           setShowConfirmedRide={setShowConfirmedRide}
           fareData={fareData}
           setVehicleType={setVehicleType}
+          availableVehicles={availableVehicles}
         />
       </div>
 

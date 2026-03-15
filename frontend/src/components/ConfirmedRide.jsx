@@ -1,13 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
-export default function ConfirmedRide({setShowConfirmedRide,setShowWaitingForDriver,fareData,vehicleType = "car"}) {
+export default function ConfirmedRide({setShowConfirmedRide, setShowWaitingForDriver, fareData, vehicleType = "car"}) {
 
-  const handleConfirmRide = () => {
-    setShowConfirmedRide(false);
-    setShowWaitingForDriver(true);
-  }
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleConfirmRide = async () => {
+    if (isConfirming) return;
+    setIsConfirming(true);
+
+    try {
+      const rideId = fareData?.ride?._id;
+      if (!rideId) {
+        console.error("No ride ID found in fareData");
+        setIsConfirming(false);
+        return;
+      }
+
+      // Call confirm API — this notifies nearby riders with matching vehicle type
+      await axios.post(`${import.meta.env.VITE_API_URL}/rides/confirm`, {
+        rideId,
+        vehicleType,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      console.log("Ride confirmed, riders notified");
+      setShowConfirmedRide(false);
+      setShowWaitingForDriver(true);
+    } catch (error) {
+      console.error("Error confirming ride:", error);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   let price; 
 
   if(vehicleType === 'car'){
@@ -63,10 +92,10 @@ export default function ConfirmedRide({setShowConfirmedRide,setShowWaitingForDri
 
       <button
       onClick={handleConfirmRide}
-      disabled={!vehicleType || !fareData}
-      className="w-full bg-black text-white py-3 rounded-lg font-semibold"
+      disabled={!vehicleType || !fareData || isConfirming}
+      className="w-full bg-black text-white py-3 rounded-lg font-semibold disabled:opacity-50"
       >
-        Confirm Ride
+        {isConfirming ? 'Confirming...' : 'Confirm Ride'}
       </button>
 
     </div>
