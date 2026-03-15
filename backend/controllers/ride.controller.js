@@ -1,4 +1,7 @@
 import { createRide } from "../services/ride.service.js";
+import { getNearbyRiders,gateAddressCordinate } from "../services/map.service.js";
+import { sendMessageToSocketId } from "../socket.js";
+import riderModel from "../models/rider.model.js";
 
 export const createRideController = async (req, res) => {
   try {
@@ -6,7 +9,6 @@ export const createRideController = async (req, res) => {
       pickupLocation,
       dropoffLocation,
       vehicleType,
-      paymentId,
       orderId,
       signature,
     } = req.body;
@@ -20,7 +22,7 @@ export const createRideController = async (req, res) => {
     const rideData = {
       ...req.body,
       userId: req.user ? req.user._id : req.body.userId,
-      paymentId,
+      
       orderId,
       signature,
       pickupLocation,
@@ -32,8 +34,27 @@ export const createRideController = async (req, res) => {
 
     const result = await createRide(rideData);
 
+    const pickUpCordinate = await gateAddressCordinate(pickupLocation);
+
+    const riderInRadius = await getNearbyRiders(pickUpCordinate.lat, pickUpCordinate.lng, 5000);
+
+    // ride.otp = "";
+    console.log("ride",result.ride._id);
+    const rideWithUser = await riderModel.findById({ _id:result.ride._id }).populate("User");
+    console.log("rideWithUser",rideWithUser);
+    riderInRadius.map((rider)=>{
+      sendMessageToSocketId(rider.soketId, {
+        event: "ride-request",
+        data: rideWithUser
+      })
+  })
+        
     return res.status(201).json(result);
+
   } catch (error) {
-    return res.status(500).json({ message: "Failed to create ride" });
+    console.error("Error creating ride:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed to create ride" });
+    }
   }
-};
+}; 

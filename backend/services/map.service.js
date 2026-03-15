@@ -100,15 +100,21 @@ export const searchPlaces = async (query) => {
   }));
 };
 
-export const getRiderInRadius = async (lat,lng,radius) => {
-  const response = await axios.get(
-    `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}`,
-    {
-      params: {
-        radius: radius,
-        number: 10
+export const getNearbyRiders = async (lat, lng, radius)=>{
+
+  const riders = await riderModel.find({
+    location:{
+      $near:{
+        $geometry:{
+          type:"Point",
+          coordinates:[lng,lat]
+        },
+        $maxDistance:radius || 5000
       }
     }
-  );
-  return response.data;
-};
+  }).limit(10);
+
+  
+
+  return riders;
+}

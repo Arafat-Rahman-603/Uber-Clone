@@ -52,16 +52,21 @@ const riderSchema = new mongoose.Schema({
         }
     },
 
-    location:{
-       lat: {
-        type: Number,
-       },
-       lng: {
-        type: Number,
-       },
+    location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
     },
+    coordinates: {
+      type: [Number], // [lng, lat]
+    }
+  }
+
 
 });
+
+riderSchema.index({ location: "2dsphere" });
 
 riderSchema.methods.matchPassword = async function(password){
     return await bcrypt.compare(password, this.password);

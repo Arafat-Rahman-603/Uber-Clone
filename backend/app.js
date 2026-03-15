@@ -10,8 +10,12 @@ dotenv.config();
 
 const app = express();
 
+
 app.use(cors({
-  origin: "*",
+  origin: [
+    "http://localhost:5173",
+    "https://m743f7fs-5173.asse.devtunnels.ms"
+  ],
   credentials: true
 }));
 app.use(express.json());

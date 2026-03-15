@@ -10,13 +10,15 @@ import { SocketContext } from "../context/SocketContext";
 export default function RiderHome() {
 
   const { socket } = useContext(SocketContext);
-  const [ ridePopUp , setRidePopUp ] = useState(true);
-  const [ gotoPickUp , setGotoPickUp ] = useState(true);
+  const [ ridePopUp , setRidePopUp ] = useState(false);
+  const [ gotoPickUp , setGotoPickUp ] = useState(false);
+  const [ rideData, setRideData ] = useState(null);
 
   const userId =  JSON.parse(localStorage.getItem('rider'))._id;
+
   useEffect(() => {
 
-  console.log(userId)
+  console.log(userId);
   if (!userId) return;
 
   socket.emit('join', {
@@ -24,25 +26,41 @@ export default function RiderHome() {
     userId
   });
 
-  const updateLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        console.log("Sending location:", position.coords.latitude, position.coords.longitude);
-        socket.emit('update-location-rider', {
-          userId: userId,
-          location: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          }
-        });
+  let watchId;
+
+  if (navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition((position) => {
+
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      console.log("Sending location:", lat, lng);
+                   
+      socket.emit('update-location-rider', {
+        userId: userId,
+        location: { lat, lng }
       });
+
+    }, (error) => {
+      console.error("Location error:", error);
+    }, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 5000
+    });
+  }
+
+  socket.on("ride-request", (data) => {
+    console.log("Ride request received:", data);
+    setRideData(data);
+    setRidePopUp(true);
+  });
+
+  return () => {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
     }
   };
-
-  const locationInterval = setInterval(updateLocation, 15000);
-  updateLocation();
-
-  return () => clearInterval(locationInterval);
 
 }, [userId]);
 
@@ -72,9 +90,9 @@ export default function RiderHome() {
       <RiderDetails/>
 
       <div
-        className={`my-5 mx-auto absolute bottom-0 left-[2.5%] w-[95%] bg-white rounded-3xl shadow-xl z-20 transition-all duration-300 overflow-hidden ${ridePopUp ? "h-[40%] p-4" : "h-[0%] p-0" } `}
+        className={`my-5 mx-auto absolute bottom-0 left-[2.5%] w-[95%] bg-white rounded-3xl shadow-xl z-20 transition-all duration-300 overflow-hidden ${ridePopUp ? "h-[50%] p-4" : "h-[0%] p-0" } `}
       >
-        <RidePopUp setRidePopUp={setRidePopUp}/>
+        <RidePopUp setRidePopUp={setRidePopUp} rideData={rideData}/>
       </div>
 
       <div
