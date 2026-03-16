@@ -1,6 +1,7 @@
 import riderModel from "../models/rider.model.js";
 import blacklistTokenModel from "../models/blacklistToken.model.js";
 import { validationResult } from "express-validator";
+import Ride from "../models/ride.model.js";
 
 export const registerRider = async (req, res) => {
   const errors = validationResult(req);
@@ -87,5 +88,42 @@ export const getProfile = async (req, res) => {
     res.status(200).json({ rider });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const getRiderStats = async (req, res) => {
+  try {
+    const riderId = req.rider._id;
+
+    const rider = await riderModel.findById(riderId).select(
+      'totalEarnings totalRides completedRides'
+    );
+
+    if (!rider) return res.status(404).json({ message: "Rider not found" });
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const todaysRides = rider.completedRides.filter(
+      (r) => new Date(r.completedAt) >= startOfToday
+    );
+
+    const todaysEarnings = todaysRides.reduce((sum, r) => sum + (r.price || 0), 0);
+
+    // Last 5 completed rides for history display
+    const recentRides = [...rider.completedRides]
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .slice(0, 5);
+
+    return res.status(200).json({
+      totalRides: rider.totalRides || 0,
+      totalEarnings: (rider.totalEarnings || 0).toFixed(2),
+      todaysRides: todaysRides.length,
+      todaysEarnings: todaysEarnings.toFixed(2),
+      recentRides,
+    });
+  } catch (error) {
+    console.error("Error getting rider stats:", error);
+    res.status(500).json({ message: error.message });
   }
 };

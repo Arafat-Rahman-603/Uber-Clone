@@ -61,7 +61,23 @@ const riderSchema = new mongoose.Schema({
     coordinates: {
       type: [Number], // [lng, lat]
     }
-  }
+  },
+
+  // Ride history embedded for fast dashboard reads
+  completedRides: [
+    {
+      rideId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ride' },
+      pickupLocation: { type: String },
+      dropoffLocation: { type: String },
+      price: { type: Number, default: 0 },
+      vehicleType: { type: String },
+      distance: { type: Number },
+      completedAt: { type: Date, default: Date.now },
+    }
+  ],
+
+  totalEarnings: { type: Number, default: 0 },
+  totalRides: { type: Number, default: 0 },
 
 
 });

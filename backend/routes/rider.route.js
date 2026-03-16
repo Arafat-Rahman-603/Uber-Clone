@@ -8,6 +8,7 @@ import {
   loginRider,
   logout,
   getProfile,
+  getRiderStats,
 } from "../controllers/rider.controller.js";
 import { authMiddlewareRider } from "../middlewares/auth.middleware.js";
 
@@ -17,5 +18,6 @@ riderRouter.post("/register", registerRiderValidation, registerRider);
 riderRouter.post("/login", loginRiderValidation, loginRider);
 riderRouter.get("/logout", logout);
 riderRouter.get("/profile", authMiddlewareRider, getProfile);
+riderRouter.get("/stats", authMiddlewareRider, getRiderStats);
 
 export default riderRouter;

@@ -3,7 +3,9 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LiveTracking from '../components/LiveTracking';
+import NavigationPanel from '../components/NavigationPanel';
 import { SocketContext } from '../context/SocketContext';
+import { fetchDirections } from '../utils/routing';
 
 export default function GotoPickUp({ setGotoPickUp, rideData }) {
     const [otp, setOtp] = useState('');
@@ -16,6 +18,8 @@ export default function GotoPickUp({ setGotoPickUp, rideData }) {
     const [liveDistance, setLiveDistance] = useState(null);
     const [liveDuration, setLiveDuration] = useState(null);
     const [liveRoute, setLiveRoute] = useState(null);
+    const [navSteps, setNavSteps] = useState([]);
+    const [showNav, setShowNav] = useState(true);
 
     // Initial load: get pickup coordinates
     useEffect(() => {
@@ -52,23 +56,20 @@ export default function GotoPickUp({ setGotoPickUp, rideData }) {
                         location: { lat, lng }
                     });
 
-                    // Calculate live distance to pickup if we have it
+                    // Get full directions from our new backend endpoint
                     if (pickupLocation) {
                         try {
-                            const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/distance-coordinates`, {
-                                params: {
-                                    originLat: lat, originLng: lng,
-                                    destLat: pickupLocation.lat, destLng: pickupLocation.lng
-                                },
-                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            if (resp.data?.distance) {
-                                setLiveDistance(resp.data.distance);
-                                setLiveDuration(resp.data.duration);
-                                setLiveRoute(resp.data.geometry);
-                            }
+                            const dirs = await fetchDirections(
+                                lat, lng,
+                                pickupLocation.lat, pickupLocation.lng,
+                                localStorage.getItem('token')
+                            );
+                            setLiveDistance(dirs.distance);
+                            setLiveDuration(dirs.duration);
+                            setLiveRoute(dirs.geometry);
+                            setNavSteps(dirs.steps || []);
                         } catch (error) {
-                            console.error("Could not calc live distance",error);
+                            console.error("Could not get directions", error);
                         }
                     }
                 },
@@ -109,6 +110,20 @@ export default function GotoPickUp({ setGotoPickUp, rideData }) {
       {/* Map Section */}
       <div className="absolute inset-x-0 top-0 h-[80%] z-0">
          <LiveTracking riderLocation={currentLocation} targetLocation={pickupLocation} isRider={true} route={liveRoute} />
+         {/* Navigation panel overlaid on the map */}
+         <NavigationPanel
+           steps={navSteps}
+           distance={liveDistance}
+           duration={liveDuration}
+           isVisible={showNav}
+         />
+         {/* Toggle button */}
+         <button
+           onClick={() => setShowNav(v => !v)}
+           className="absolute top-3 right-3 z-40 bg-white/90 text-xs px-3 py-1.5 rounded-full shadow font-medium"
+         >
+           {showNav ? 'Hide Nav' : 'Show Nav'}
+         </button>
       </div>
 
       {/* Top Content (Transparent pad for absolute map) */}

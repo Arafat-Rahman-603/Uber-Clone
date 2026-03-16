@@ -6,6 +6,8 @@ import { MdPayment } from "react-icons/md";
 import { SocketContext } from '../context/SocketContext';
 import axios from 'axios';
 import LiveTracking from '../components/LiveTracking';
+import NavigationPanel from '../components/NavigationPanel';
+import { fetchDirections } from '../utils/routing';
 
 
 export default function Rideing() {
@@ -23,6 +25,8 @@ export default function Rideing() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [navSteps, setNavSteps] = useState([]);
+  const [showNav, setShowNav] = useState(true);
 
   useEffect(() => {
     if (!rideData) {
@@ -46,23 +50,20 @@ export default function Rideing() {
     const updateLocationListener = async (data) => {
         setRiderLocation(data);
 
-        // Fetch live route
+        // Fetch full directions (geometry + steps)
         if (destinationLocation && data) {
             try {
-                const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/distance-coordinates`, {
-                    params: {
-                        originLat: data.lat, originLng: data.lng,
-                        destLat: destinationLocation.lat, destLng: destinationLocation.lng
-                    },
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                });
-                if (resp.data?.distance) {
-                    setLiveDistance(resp.data.distance);
-                    setLiveDuration(resp.data.duration);
-                    setLiveRoute(resp.data.geometry);
-                }
+                const dirs = await fetchDirections(
+                    data.lat, data.lng,
+                    destinationLocation.lat, destinationLocation.lng,
+                    localStorage.getItem('token')
+                );
+                setLiveDistance(dirs.distance);
+                setLiveDuration(dirs.duration);
+                setLiveRoute(dirs.geometry);
+                setNavSteps(dirs.steps || []);
             } catch (error) {
-                console.error("Could not calc live distance",error);
+                console.error("Could not get directions", error);
             }
         }
     };
@@ -109,6 +110,18 @@ export default function Rideing() {
     <div className='h-screen w-screen'>
       <div className="absolute inset-0 z-10 h-[50%]">
           <LiveTracking riderLocation={riderLocation} targetLocation={destinationLocation} isRider={false} route={liveRoute} />
+          <NavigationPanel
+            steps={navSteps}
+            distance={liveDistance}
+            duration={liveDuration}
+            isVisible={showNav}
+          />
+          <button
+            onClick={() => setShowNav(v => !v)}
+            className="absolute top-3 right-3 z-40 bg-white/90 text-xs px-3 py-1.5 rounded-full shadow font-medium"
+          >
+            {showNav ? 'Hide Nav' : 'Show Nav'}
+          </button>
       </div>
         <div className="flex justify-start items-center fixed top-0 left-0 w-full z-20 p-5">
                 <img src="/logo.png" alt="car" className="w-20 h-full object-cover" />

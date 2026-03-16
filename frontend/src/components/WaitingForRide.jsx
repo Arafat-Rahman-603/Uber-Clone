@@ -4,6 +4,8 @@ import { MdPayment } from "react-icons/md";
 import { SocketContext } from '../context/SocketContext';
 import axios from 'axios';
 import LiveTracking from '../components/LiveTracking';
+import NavigationPanel from '../components/NavigationPanel';
+import { fetchDirections } from '../utils/routing';
 
 export default function WaitingForRide({ rideData }) {
 
@@ -15,6 +17,8 @@ export default function WaitingForRide({ rideData }) {
   const [liveDistance, setLiveDistance] = useState(null);
   const [liveDuration, setLiveDuration] = useState(null);
   const [liveRoute, setLiveRoute] = useState(null);
+  const [navSteps, setNavSteps] = useState([]);
+  const [showNav, setShowNav] = useState(true);
 
   useEffect(() => {
     if (!rideData) return;
@@ -36,23 +40,20 @@ export default function WaitingForRide({ rideData }) {
     const updateLocationListener = async (data) => {
         setRiderLocation(data);
 
-        // Fetch live distance
+        // Fetch full directions
         if (pickupLocation && data) {
             try {
-                const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/distance-coordinates`, {
-                    params: {
-                        originLat: data.lat, originLng: data.lng,
-                        destLat: pickupLocation.lat, destLng: pickupLocation.lng
-                    },
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                });
-                if (resp.data?.distance) {
-                    setLiveDistance(resp.data.distance);
-                    setLiveDuration(resp.data.duration);
-                    setLiveRoute(resp.data.geometry);
-                }
+                const dirs = await fetchDirections(
+                    data.lat, data.lng,
+                    pickupLocation.lat, pickupLocation.lng,
+                    localStorage.getItem('token')
+                );
+                setLiveDistance(dirs.distance);
+                setLiveDuration(dirs.duration);
+                setLiveRoute(dirs.geometry);
+                setNavSteps(dirs.steps || []);
             } catch (error) {
-                console.error("Could not calc live distance",error);
+                console.error("Could not get directions", error);
             }
         }
     };
@@ -68,6 +69,18 @@ export default function WaitingForRide({ rideData }) {
     <div className="h-full w-full relative">
       <div className="absolute inset-0 z-0 h-full">
           <LiveTracking riderLocation={riderLocation} targetLocation={pickupLocation} isRider={false} route={liveRoute} />
+          <NavigationPanel
+            steps={navSteps}
+            distance={liveDistance}
+            duration={liveDuration}
+            isVisible={showNav}
+          />
+          <button
+            onClick={() => setShowNav(v => !v)}
+            className="absolute top-3 right-3 z-40 bg-white/90 text-xs px-3 py-1.5 rounded-full shadow font-medium"
+          >
+            {showNav ? 'Hide Nav' : 'Show Nav'}
+          </button>
       </div>
 
     <div className="absolute bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-xl z-20 p-5">

@@ -5,6 +5,7 @@ import {
 } from "../services/map.service.js";
 import { sendMessageToSocketId } from "../socket.js";
 import Ride from "../models/ride.model.js";
+import riderModel from "../models/rider.model.js";
 
 export const createRideController = async (req, res) => {
   try {
@@ -244,6 +245,29 @@ export const endRideController = async (req, res) => {
 
     ride.status = "completed";
     await ride.save();
+
+    // Embed completed ride into the rider's history and update counters
+    if (ride.rider) {
+      const ridePrice = ride.price?.selected ? parseFloat(ride.price.selected) : 0;
+      const riderId = ride.rider._id || ride.rider;
+      await riderModel.findByIdAndUpdate(riderId, {
+        $push: {
+          completedRides: {
+            rideId: ride._id,
+            pickupLocation: ride.pickupLocation,
+            dropoffLocation: ride.dropoffLocation,
+            price: ridePrice,
+            vehicleType: ride.vehicleType,
+            distance: ride.distance,
+            completedAt: new Date(),
+          }
+        },
+        $inc: {
+          totalEarnings: ridePrice,
+          totalRides: 1,
+        }
+      });
+    }
 
     // Notify user that the ride has ended
     if (ride.user && ride.user.soketId) {

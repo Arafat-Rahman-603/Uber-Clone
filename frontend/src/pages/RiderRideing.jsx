@@ -4,7 +4,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import FinishRide from '../components/FinishRide';
 import LiveTracking from '../components/LiveTracking';
+import NavigationPanel from '../components/NavigationPanel';
 import { SocketContext } from '../context/SocketContext';
+import { fetchDirections } from '../utils/routing';
 
 export default function RiderRideing() {
 
@@ -23,6 +25,8 @@ export default function RiderRideing() {
     const [liveRoute, setLiveRoute] = useState(null);
     const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
     const [showThankYou, setShowThankYou] = useState(false);
+    const [navSteps, setNavSteps] = useState([]);
+    const [showNav, setShowNav] = useState(true);
 
     // Initial load effects
     useEffect(() => {
@@ -59,23 +63,20 @@ export default function RiderRideing() {
                         location: { lat, lng }
                     });
 
-                    // Calculate live distance if we have target
+                    // Get full directions
                     if (destinationLocation) {
                         try {
-                            const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/distance-coordinates`, {
-                                params: {
-                                    originLat: lat, originLng: lng,
-                                    destLat: destinationLocation.lat, destLng: destinationLocation.lng
-                                },
-                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            if (resp.data?.distance) {
-                                setLiveDistance(resp.data.distance);
-                                setLiveDuration(resp.data.duration);
-                                setLiveRoute(resp.data.geometry);
-                            }
+                            const dirs = await fetchDirections(
+                                lat, lng,
+                                destinationLocation.lat, destinationLocation.lng,
+                                localStorage.getItem('token')
+                            );
+                            setLiveDistance(dirs.distance);
+                            setLiveDuration(dirs.duration);
+                            setLiveRoute(dirs.geometry);
+                            setNavSteps(dirs.steps || []);
                         } catch (error) {
-                            console.error("Could not calc live distance",error);
+                            console.error("Could not get directions", error);
                         }
                     }
                 },
@@ -116,6 +117,18 @@ export default function RiderRideing() {
       <div className="relative h-[80%] w-full">
         <div className="absolute inset-0 z-0">
             <LiveTracking riderLocation={currentLocation} targetLocation={destinationLocation} isRider={true} route={liveRoute} />
+            <NavigationPanel
+              steps={navSteps}
+              distance={liveDistance}
+              duration={liveDuration}
+              isVisible={showNav}
+            />
+            <button
+              onClick={() => setShowNav(v => !v)}
+              className="absolute top-3 right-3 z-40 bg-white/90 text-xs px-3 py-1.5 rounded-full shadow font-medium"
+            >
+              {showNav ? 'Hide Nav' : 'Show Nav'}
+            </button>
         </div>
 
         {/* Uber Logo */}
