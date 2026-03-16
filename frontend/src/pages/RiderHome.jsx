@@ -1,4 +1,5 @@
 import React, { useState,useContext,useEffect } from 'react'
+import axios from 'axios';
 import { TbLogout } from "react-icons/tb";
 import { Link } from "react-router-dom"
 import RiderDetails from '../components/RiderDetails';
@@ -50,6 +51,7 @@ export default function RiderHome() {
     });
   }
 
+
   socket.on("ride-request", (data) => {
     console.log("Ride request received:", data);
     setRideData(data);
@@ -63,7 +65,24 @@ export default function RiderHome() {
   };
 
 }, [userId]);
-
+  const handleAcceptRide = async (rideInfo) => {
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/rides/accept`, {
+        rideId: rideInfo._id
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log("Ride accepted:", response.data);
+      
+      setRideData(response.data);
+      setRidePopUp(false);
+      setGotoPickUp(true);
+    } catch (error) {
+      console.error("Error accepting ride:", error);
+    }
+  };
 
   return (
       <div className="w-screen h-screen bg-gray-100 relative overflow-hidden rounded-xl shadow-xl">
@@ -92,13 +111,13 @@ export default function RiderHome() {
       <div
         className={`my-5 mx-auto absolute bottom-0 left-[2.5%] w-[95%] bg-white rounded-3xl shadow-xl z-20 transition-all duration-300 overflow-hidden ${ridePopUp ? "h-[50%] p-4" : "h-[0%] p-0" } `}
       >
-        <RidePopUp setRidePopUp={setRidePopUp} rideData={rideData}/>
+        <RidePopUp setRidePopUp={setRidePopUp} rideData={rideData} onAccept={handleAcceptRide}/>
       </div>
 
       <div
         className={`absolute bottom-0 w-[100%] bg-white z-40 transition-all duration-300 overflow-hidden ${gotoPickUp ? "h-[100%] p-0" : "h-[0%] p-0" } `}
       >
-        <GotoPickUp setGotoPickUp={setGotoPickUp} />
+        <GotoPickUp setGotoPickUp={setGotoPickUp} rideData={rideData} />
       </div>
     </div>
   );

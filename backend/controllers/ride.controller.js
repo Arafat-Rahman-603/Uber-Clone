@@ -92,6 +92,7 @@ export const confirmRideController = async (req, res) => {
 
     ride.vehicleType = vehicleType;
     ride.price.selected = selectedPrice;
+    ride.markModified('price');
     ride.status = "confirmed";
     await ride.save();
 
@@ -136,3 +137,90 @@ export const confirmRideController = async (req, res) => {
     }
   }
 };
+
+export const acceptRideController = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+
+    if (!rideId) {
+      return res.status(400).json({ message: "rideId is required" });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.status !== "confirmed") {
+      return res.status(400).json({ message: "Ride is not available for acceptance" });
+    }
+
+    ride.status = "accepted";
+    ride.rider = req.rider._id;
+    await ride.save();
+
+    // Populate user and rider for sending comprehensive data, and include OTP for the user via select
+    const rideWithUserAndRider = await Ride.findById(rideId)
+      .select('+otp')
+      .populate("user")
+      .populate("rider");
+
+    // Notify user that ride is accepted
+    if (rideWithUserAndRider.user && rideWithUserAndRider.user.soketId) {
+      sendMessageToSocketId(rideWithUserAndRider.user.soketId, {
+        event: "ride-accepted",
+        data: rideWithUserAndRider,
+      });
+    }
+
+    return res.status(200).json(rideWithUserAndRider);
+  } catch (error) {
+    console.error("Error accepting ride:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed to accept ride" });
+    }
+  }
+};
+
+export const startRideController = async (req, res) => {
+  try {
+    const { rideId, otp } = req.body;
+
+    if (!rideId || !otp) {
+      return res.status(400).json({ message: "rideId and otp are required" });
+    }
+
+    const ride = await Ride.findById(rideId).select('+otp').populate('user rider');
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.status !== "accepted") {
+      return res.status(400).json({ message: "Ride not accepted yet" });
+    }
+
+    if (ride.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    ride.status = "ongoing";
+    await ride.save();
+
+    if (ride.user && ride.user.soketId) {
+      sendMessageToSocketId(ride.user.soketId, {
+        event: "ride-started",
+        data: ride,
+      });
+    }
+
+    return res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error starting ride:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed to start ride" });
+    }
+  }
+};
+

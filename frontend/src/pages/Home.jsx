@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { IoIosArrowDown } from "react-icons/io";
 import RideOption from "../components/RideOption";
 import ConfirmedRide from "../components/ConfirmedRide";
@@ -10,6 +11,7 @@ import { SocketContext } from "../context/SocketContext";
 
 export default function Home() {
   const { socket } = useContext(SocketContext);
+  const navigate = useNavigate();
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -24,6 +26,7 @@ export default function Home() {
   const [showConfirmedRide, setShowConfirmedRide] = useState(false);
   const [showWaitingForDriver, setShowWaitingForDriver] = useState(false);
   const [showWaitingForRide, setShowWaitingForRide] = useState(false);
+  const [rideAcceptedData, setRideAcceptedData] = useState(null);
 
   const userId = JSON.parse(localStorage.getItem('user'))._id;
   useEffect(() => {
@@ -36,7 +39,24 @@ export default function Home() {
     userId
   });
 
-}, [userId]);
+  socket.on("ride-accepted", (data) => {
+    console.log("Ride accepted by rider:", data);
+    setRideAcceptedData(data);
+    setShowWaitingForDriver(false);
+    setShowWaitingForRide(true);
+  });
+
+  socket.on("ride-started", (data) => {
+    console.log("Ride started:", data);
+    navigate('/user/rideing', { state: { rideData: data } });
+  });
+
+  return () => {
+    socket.off("ride-accepted");
+    socket.off("ride-started");
+  };
+
+}, [userId, socket, navigate]);
 
 
   const closeAllPanels = () => {
@@ -237,12 +257,11 @@ export default function Home() {
         />
       </div>
 
-      {/* WAITING FOR RIDE */}
       <div
         className={`absolute bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-xl z-40 transition-all duration-300 overflow-hidden
         ${showWaitingForRide ? "h-[70%]" : "h-0 pointer-events-none"}`}
       >
-        <WaitingForRide setShowWaitingForRide={setShowWaitingForRide} />
+        <WaitingForRide setShowWaitingForRide={setShowWaitingForRide} rideData={rideAcceptedData} />
       </div>
 
     </div>

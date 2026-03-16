@@ -1,11 +1,33 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-export default function GotoPickUp(
-    {setGotoPickUp}
-) {
-  
+export default function GotoPickUp({ setGotoPickUp, rideData }) {
+    const [otp, setOtp] = useState('');
+    const navigate = useNavigate();
+
+    const submitOtp = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/rides/start`, {
+                rideId: rideData._id,
+                otp: otp
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.status === 200) {
+                setGotoPickUp(false);
+                navigate('/rider/rideing', { state: { rideData: response.data } });
+            }
+        } catch (error) {
+            console.error("Error starting ride:", error);
+            // Optionally set an error state here to display to the user
+        }
+    };
 
     return (
     <div className="mx-auto h-screen bg-gray-100 flex flex-col justify-between">
@@ -30,7 +52,7 @@ export default function GotoPickUp(
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
-              <h3 className="font-semibold">Esther Berry</h3>
+              <h3 className="font-semibold">{rideData?.user?.fullName?.firstName} {rideData?.user?.fullName?.lastName}</h3>
               <div className="flex gap-2 mt-1">
                 <span className="bg-yellow-400 text-xs px-2 py-0.5 rounded-full font-medium">
                   Cash
@@ -43,8 +65,8 @@ export default function GotoPickUp(
           </div>
 
           <div className="text-right">
-            <h3 className="font-semibold text-xl">৳25.00</h3>
-            <p className="text-sm text-gray-500">2.2 km</p>
+            <h3 className="font-semibold text-xl">৳{rideData?.price?.[rideData?.vehicleType] || rideData?.price?.selected}</h3>
+            <p className="text-sm text-gray-500">{rideData?.distance ? (rideData.distance / 1000).toFixed(1) : 0} km</p>
           </div>
         </div>
 
@@ -52,20 +74,22 @@ export default function GotoPickUp(
         <div className="mb-3">
           <p className="text-gray-400 text-xs font-semibold">PICK UP</p>
           <div className="flex justify-between items-center">
-            <p className="font-medium">7958 Swift Village</p>
+            <p className="font-medium">{rideData?.pickupLocation}</p>
           </div>
         </div>
 
         {/* Drop Off */}
         <div className="mb-3">
           <p className="text-gray-400 text-xs font-semibold">DROP OFF</p>
-          <p className="font-medium">105 William St, Chicago, US</p>
+          <p className="font-medium">{rideData?.dropoffLocation}</p>
         </div>
 
         {/* OTP SCTION */}
 
-        <form action="">
+        <form onSubmit={submitOtp}>
             <input type="text" 
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
             className="border-2 border-gray-400 rounded-md p-2 w-full h-12 my-4 mx-auto font-semibold text-center" 
             placeholder='Enter OTP'
             />
@@ -75,15 +99,15 @@ export default function GotoPickUp(
         <div className="border-t pt-3 space-y-2 text-sm">
           <div className="flex justify-between">
             <p>Cash</p>
-            <p>৳15.00</p>
+            <p>৳{rideData?.price?.[rideData?.vehicleType] || rideData?.price?.selected}</p>
           </div>
           <div className="flex justify-between">
             <p>Discount</p>
-            <p>৳10.00</p>
+            <p>৳0.00</p>
           </div>
           <div className="flex justify-between font-semibold">
             <p>Paid amount</p>
-            <p>৳25.00</p>
+            <p>৳{rideData?.price?.[rideData?.vehicleType] || rideData?.price?.selected}</p>
           </div>
         </div>
 
@@ -94,11 +118,11 @@ export default function GotoPickUp(
 
       {/* Bottom Button */}
       <div className="p-4">
-        <Link to={"/rider/rideing"}
-         onClick={()=>setGotoPickUp(false)}
+        <button
+         onClick={submitOtp}
          className="w-full block text-center bg-yellow-400 hover:bg-yellow-500 py-3 rounded-2xl font-semibold">
-          GO TO PICK UP
-        </Link>
+          START RIDE
+        </button>
       </div>
 
     </div>

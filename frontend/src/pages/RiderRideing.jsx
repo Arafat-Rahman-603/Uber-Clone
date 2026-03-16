@@ -54,7 +54,7 @@ export default function RiderRideing() {
 
 
 <div
-    className={`absolute bottom-0 w-[100%] bg-white z-40 transition-all duration-300 overflow-hidden ${compeleteRide ? "h-[100%] p-0" : "h-[0%] p-0" } `}
+    className={`absolute bottom-0 w-[100%] bg-white z-40 transition-all duration-300 overflow-hidden ${compeleteRide ? "h-[80%] p-0" : "h-[0%] p-0" } `}
 >
         <FinishRide setCompeleteRide={setCompeleteRide} />
 </div>

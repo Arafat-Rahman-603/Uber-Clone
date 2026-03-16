@@ -3,7 +3,7 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
 export default function FinishRide(
-    {setCompeleteRide}
+    {setCompeleteRide, rideData, vehicleType}
 ) {
 
     return (
@@ -12,9 +12,9 @@ export default function FinishRide(
       {/* CAR IMAGE */}
       <div className="flex justify-center mb-4">
         <img
-          src="/car-logo.png"   // change path if needed
+          src={vehicleType === "car" ? "/car-logo.png" : vehicleType === "bike" ? "/bike-logo.png" : "/auto-logo.png"}   // change path if needed
           alt="car"
-          className="w-36"
+          className={vehicleType === "car" ? "w-36" : vehicleType === "bike" ? "w-24" : "w-24"}
         />
       </div>
 

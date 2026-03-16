@@ -26,7 +26,7 @@ export default function RidePopUp({ setRidePopUp, rideData, onAccept }) {
         </div>
 
         <div className="text-right">
-          <h3 className="font-semibold text-2xl">৳{rideData.price?.selected}</h3>
+          <h3 className="font-semibold text-2xl">৳{rideData?.price?.[rideData?.vehicleType] || rideData?.price?.selected}</h3>
           <p className="text-sm text-gray-500">
             {rideData.distance ? (rideData.distance / 1000).toFixed(1) : '0'} km
           </p>
@@ -62,6 +62,7 @@ export default function RidePopUp({ setRidePopUp, rideData, onAccept }) {
           onClick={() => {
             if (onAccept) onAccept(rideData);
             setRidePopUp(false);
+            
           }}
           className="bg-yellow-400 hover:bg-yellow-500 px-6 py-2 rounded-xl font-semibold"
         >
