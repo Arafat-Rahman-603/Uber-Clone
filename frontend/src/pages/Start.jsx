@@ -5,7 +5,7 @@ import { FaArrowRight } from "react-icons/fa";
 
 export default function Start() {
   return (
-   <div className="flex bg-[url(./home-bg-img.png)] bg-cover bg-center flex-col justify-between bg-black h-screen w-full">
+   <div className="flex bg-[url(/home-bg-img.png)] bg-cover bg-center flex-col justify-between bg-black h-screen w-full">
     <div className="">
         <h1 className='text-4xl text-white font-semibold py-6 px-8'>Uber</h1>
     </div>

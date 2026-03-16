@@ -14,6 +14,9 @@ export default function RiderSignup() {
   const [step, setStep] = useState(1);
   const [hidepassword, setHidePassword] = useState(false);
   const [hideconfirmPassword, setHideConfirmPassword] = useState(false);
+  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -35,15 +38,34 @@ export default function RiderSignup() {
   const handleNext = () => setStep((prev) => prev + 1);
   const handlePrev = () => setStep((prev) => prev - 1);
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-
-    console.log(formData);
 
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/riders/send-otp`,
+        { email: formData.email }
+      );
+      if (response.status === 200) {
+        setShowOtpStep(true);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
     const riderSignupData = {
       fullName: {
@@ -58,23 +80,100 @@ export default function RiderSignup() {
         color: formData.vehicleColor,
         capacity: Number(formData.vehicleCapacity),
       },
+      otp,
     };
 
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/riders/register`,
-      riderSignupData,
-    );
-    if (response.status === 201) {
-      localStorage.setItem("token", response.data.token);
-      setRider(response.data.rider);
-      navigate("/home");
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/riders/register`,
+        riderSignupData
+      );
+      if (response.status === 201) {
+        localStorage.setItem("token", response.data.token);
+        setRider(response.data.rider);
+        navigate("/home");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/riders/send-otp`, {
+        email: formData.email,
+      });
+      alert("OTP resent successfully!");
+    } catch (error) {
+      alert("Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showOtpStep) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold">Verify Your Email</h2>
+            <p className="text-gray-500 mt-2">
+              We sent a 6-digit code to <strong>{formData.email}</strong>
+            </p>
+          </div>
+          <form onSubmit={handleVerifyAndRegister}>
+            <input
+              type="text"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              className="border-2 border-gray-200 rounded-md p-2 w-full h-14 text-center text-2xl font-bold tracking-[0.5em] mx-auto"
+              required
+              placeholder="000000"
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="bg-black px-4 flex justify-between items-center text-white w-full h-12 rounded-md mt-4 mx-auto font-semibold active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <p></p>
+              <span className="text-xl">
+                {loading ? "Verifying..." : "Verify & Sign Up"}
+              </span>
+              <FaArrowRight />
+            </button>
+          </form>
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={() => {
+                setShowOtpStep(false);
+                setOtp("");
+              }}
+              className="text-gray-500 font-semibold cursor-pointer"
+            >
+              ← Go Back
+            </button>
+            <button
+              onClick={handleResendOtp}
+              disabled={loading}
+              className="text-black font-semibold cursor-pointer disabled:opacity-50"
+            >
+              Resend Code
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="w-full h-[80vh] flex flex-col px-4 pt-8 pb-4">
-        <form onSubmit={handleSubmit} className="gap-2">
+        <form onSubmit={handleSendOtp} className="gap-2">
           <div className="flex flex-col items-start">
             <p className="text-[1rem] font-bold">Welcome Rider,</p>
             <p className="text-[1.5rem] font-bold leading-0">
@@ -222,9 +321,10 @@ export default function RiderSignup() {
             ) : (
               <button
                 type="submit"
-                className="bg-black text-white w-full h-12 rounded-md font-semibold flex items-center justify-center gap-2"
+                disabled={loading}
+                className="bg-black text-white w-full h-12 rounded-md font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Sign Up <FaArrowRight />
+                {loading ? "Sending Code..." : "Sign Up"} <FaArrowRight />
               </button>
             )}
           </div>
