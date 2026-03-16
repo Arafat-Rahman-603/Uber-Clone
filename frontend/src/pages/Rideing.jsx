@@ -1,11 +1,15 @@
 import React from 'react'
 import { RiHome6Fill } from "react-icons/ri";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
 
 export default function Rideing() {
+  const location = useLocation();
+  const rideData = location.state?.rideData;
+  const vehicleType = rideData?.rider?.vehicle?.vehicleType;
+
   return (
     <div className='h-screen w-screen'>
         <img src="/map.png" alt="map" className="w-full z-10 h-[50%] object-cover" />
@@ -23,27 +27,27 @@ export default function Rideing() {
 
         {/* CAR IMAGE */}
         <img
-          src="/car-logo.png"
+          src={vehicleType === "car" ? "/car-logo.png" : vehicleType === "bike" ? "/bike-logo.png" : "/auto-logo.png"}
           alt="car"
-          className="w-24"
+          className={vehicleType === "car" ? "w-24" : vehicleType === "bike" ? "w-16" : "w-16"}
         />
 
         {/* DRIVER INFO */}
         <div className="text-right">
-          <h4 className="font-semibold text-lg">Rakib</h4>
-          <h2 className="font-bold text-xl">AC 4095 KP 873</h2>
-          <p className="text-gray-500 text-sm">Toyota Corolla</p>
+          <h4 className="font-semibold text-lg">{rideData?.rider?.fullName?.firstName} {rideData?.rider?.fullName?.lastName}</h4>
+          <h2 className="font-bold text-xl">{rideData?.rider?.vehicle?.vehicleNumber}</h2>
+          <p className="text-gray-500 text-sm">{rideData?.rider?.vehicle?.vehicleType}</p>
         </div>
       </div>
 
 
-      {/* PICKUP */}
+      {/* DROP OFF */}
       <div className="flex items-start gap-4 py-4 border-b">
         <FaMapMarkerAlt className="text-black mt-1" />
         <div>
-          <h3 className="font-semibold">562/11-A</h3>
+          <h3 className="font-semibold">{rideData?.dropoffLocation}</h3>
           <p className="text-gray-500 text-sm">
-            Kaikondrahalli, Bengaluru, Karnataka
+            
           </p>
         </div>
       </div>
@@ -52,7 +56,7 @@ export default function Rideing() {
       <div className="flex items-start gap-4 py-4">
         <MdPayment className="text-black text-xl mt-1" />
         <div>
-          <h3 className="font-semibold text-lg">৳120</h3>
+          <h3 className="font-semibold text-lg">৳{rideData?.price?.selected}</h3>
           <p className="text-gray-500 text-sm">Cash</p>
         </div>
       </div>

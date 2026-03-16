@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { TbLogout } from "react-icons/tb";
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import FinishRide from '../components/FinishRide';
 
 export default function RiderRideing() {
 
     const [compeleteRide, setCompeleteRide ] = useState(false)
+    const location = useLocation();
+    const rideData = location.state?.rideData;
 
 
   return (
@@ -35,10 +37,11 @@ export default function RiderRideing() {
                       text-2xl font-bold text-black 
                       bg-gradient-to-br from-white to-white/50 
                       rounded-full shadow-lg">
-        4 KM
+        {rideData?.distance ? (rideData.distance / 1000).toFixed(1) : 0} 
+        <span className="text-xs ml-1 mt-1">KM</span>
       </div>
       <p className="mt-2 text-sm font-bold tracking-wider text-white">
-        AWAY
+        FAR
       </p>
     </div>
 
@@ -56,7 +59,7 @@ export default function RiderRideing() {
 <div
     className={`absolute bottom-0 w-[100%] bg-white z-40 transition-all duration-300 overflow-hidden ${compeleteRide ? "h-[80%] p-0" : "h-[0%] p-0" } `}
 >
-        <FinishRide setCompeleteRide={setCompeleteRide} />
+        <FinishRide setCompeleteRide={setCompeleteRide} rideData={rideData} vehicleType={rideData?.vehicleType} />
 </div>
 
 

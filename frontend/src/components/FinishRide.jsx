@@ -22,9 +22,9 @@ export default function FinishRide(
       <div className="flex items-center gap-4 py-4 border-b">
         <FaMapMarkerAlt className="text-black mt-1" />
         <div>
-          <h3 className="font-semibold text-lg">562/11-A</h3>
+          <h3 className="font-semibold text-lg">{rideData?.pickupLocation}</h3>
           <p className="text-gray-500 text-sm">
-            Kaikondrahalli, Bengaluru, Karnataka
+            
           </p>
         </div>
       </div>
@@ -33,10 +33,9 @@ export default function FinishRide(
       <div className="flex items-center gap-4 py-4 border-b">
         <p className="text-xl font-bold ">⊡</p>
         <div>
-          <h3 className="font-semibold text-lg">Third Wave Coffee</h3>
+          <h3 className="font-semibold text-lg">{rideData?.dropoffLocation}</h3>
           <p className="text-gray-500 text-sm">
-            17th Cross Rd, PWD Quarters, 1st Sector,
-            HSR Layout, Bengaluru, Karnataka
+            
           </p>
         </div>
       </div>
@@ -45,8 +44,8 @@ export default function FinishRide(
       <div className="flex items-start gap-4 py-4">
         <MdPayment className="text-black text-xl mt-1" />
         <div>
-          <h3 className="font-semibold text-lg">৳120</h3>
-          <p className="text-gray-500 text-sm">Cash Cash</p>
+          <h3 className="font-semibold text-lg">৳{rideData?.price?.[vehicleType] || rideData?.price?.selected}</h3>
+          <p className="text-gray-500 text-sm">Cash</p>
         </div>
       </div>
 
