@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import userModel from "./models/user.model.js";
 import riderModel from "./models/rider.model.js";
+import rideModel from "./models/ride.model.js";
 
 let io;
 
@@ -35,6 +36,18 @@ export const initializeSocket = (server) => {
             coordinates: [location.lng, location.lat], // ⚠️ lng first
           },
         });
+
+        const activeRide = await rideModel.findOne({
+            rider: userId,
+            status: { $in: ['accepted', 'ongoing'] }
+        }).populate('user');
+
+        if (activeRide && activeRide.user && activeRide.user.soketId) {
+            sendMessageToSocketId(activeRide.user.soketId, {
+                event: 'rider-location-update',
+                data: location
+            });
+        }
 
         console.log("Rider location updated:", userId);
       } catch (error) {

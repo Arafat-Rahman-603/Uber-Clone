@@ -1,11 +1,85 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LiveTracking from '../components/LiveTracking';
+import { SocketContext } from '../context/SocketContext';
 
 export default function GotoPickUp({ setGotoPickUp, rideData }) {
     const [otp, setOtp] = useState('');
     const navigate = useNavigate();
+    const { socket } = useContext(SocketContext);
+    const userId = JSON.parse(localStorage.getItem('rider'))?._id;
+
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [pickupLocation, setPickupLocation] = useState(null);
+    const [liveDistance, setLiveDistance] = useState(null);
+    const [liveDuration, setLiveDuration] = useState(null);
+    const [liveRoute, setLiveRoute] = useState(null);
+
+    // Initial load: get pickup coordinates
+    useEffect(() => {
+        if (!rideData) return;
+
+        const fetchPickupLocation = async () => {
+            try {
+                const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/get-coordinates?address=${rideData.pickupLocation}`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (resp.data) setPickupLocation(resp.data);
+            } catch (error) {
+                console.error("Failed to load pickup coords", error);
+            }
+        };
+        fetchPickupLocation();
+    }, [rideData]);
+
+    // Live tracking
+    useEffect(() => {
+        if (!userId) return;
+
+        let watchId;
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setCurrentLocation({ lat, lng });
+
+                    // Broadcast to user while going to pickup
+                    socket.emit('update-location-rider', {
+                        userId: userId,
+                        location: { lat, lng }
+                    });
+
+                    // Calculate live distance to pickup if we have it
+                    if (pickupLocation) {
+                        try {
+                            const resp = await axios.get(`${import.meta.env.VITE_API_URL}/maps/distance-coordinates`, {
+                                params: {
+                                    originLat: lat, originLng: lng,
+                                    destLat: pickupLocation.lat, destLng: pickupLocation.lng
+                                },
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                            });
+                            if (resp.data?.distance) {
+                                setLiveDistance(resp.data.distance);
+                                setLiveDuration(resp.data.duration);
+                                setLiveRoute(resp.data.geometry);
+                            }
+                        } catch (error) {
+                            console.error("Could not calc live distance",error);
+                        }
+                    }
+                },
+                (err) => console.log(err),
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+        return () => {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+        }
+    }, [userId, socket, pickupLocation]);
 
     const submitOtp = async (e) => {
         e.preventDefault();
@@ -30,11 +104,17 @@ export default function GotoPickUp({ setGotoPickUp, rideData }) {
     };
 
     return (
-    <div className="mx-auto h-screen bg-gray-100 flex flex-col justify-between">
+    <div className="mx-auto h-full bg-gray-100 flex flex-col justify-between relative">
 
+      {/* Map Section */}
+      <div className="absolute inset-x-0 top-0 h-[80%] z-0">
+         <LiveTracking riderLocation={currentLocation} targetLocation={pickupLocation} isRider={true} route={liveRoute} />
+      </div>
 
-      {/* Top Content */}
-      <div className="bg-white rounded-b-3xl shadow-md p-4">
+      {/* Top Content (Transparent pad for absolute map) */}
+      <div className="h-[40%] pointer-events-none"></div>
+
+      <div className="bg-white rounded-t-3xl shadow-md p-4 z-10 flex-grow flex flex-col justify-between">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -66,7 +146,10 @@ export default function GotoPickUp({ setGotoPickUp, rideData }) {
 
           <div className="text-right">
             <h3 className="font-semibold text-xl">৳{rideData?.price?.[rideData?.vehicleType] || rideData?.price?.selected}</h3>
-            <p className="text-sm text-gray-500">{rideData?.distance ? (rideData.distance / 1000).toFixed(1) : 0} km</p>
+            <p className="text-sm text-gray-500">
+                {liveDistance ? (liveDistance / 1000).toFixed(1) : (rideData?.distance ? (rideData.distance / 1000).toFixed(1) : 0)} km
+                {liveDuration ? ` • ${Math.round(liveDuration / 60)} min` : ''}
+            </p>
           </div>
         </div>
 

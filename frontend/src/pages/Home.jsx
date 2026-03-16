@@ -7,6 +7,7 @@ import ConfirmedRide from "../components/ConfirmedRide";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import WaitingForDriverCon from "../components/WaitingForDriverCon";
 import WaitingForRide from "../components/WaitingForRide";
+import LiveTracking from '../components/LiveTracking';
 import { SocketContext } from "../context/SocketContext";
 
 export default function Home() {
@@ -27,12 +28,22 @@ export default function Home() {
   const [showWaitingForDriver, setShowWaitingForDriver] = useState(false);
   const [showWaitingForRide, setShowWaitingForRide] = useState(false);
   const [rideAcceptedData, setRideAcceptedData] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
 
   const userId = JSON.parse(localStorage.getItem('user'))._id;
   useEffect(() => {
 
   console.log(userId)
   if (!userId) return;
+
+  if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+          setCurrentLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+          });
+      });
+  }
 
   socket.emit('join', {
     userType: 'user',
@@ -126,11 +137,9 @@ export default function Home() {
     <div className="w-full h-screen relative overflow-hidden bg-gray-100">
 
       {/* MAP */}
-      <img
-        src="/map.png"
-        alt="map"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <div className="absolute inset-0 w-full h-full z-0">
+          <LiveTracking riderLocation={currentLocation} isRider={true} />
+      </div>
 
       {/* TOP BAR */}
       <div className="relative z-20 flex justify-between items-center p-5">

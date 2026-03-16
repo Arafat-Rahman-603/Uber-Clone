@@ -1,10 +1,30 @@
 import React from 'react'
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
+import axios from 'axios';
 
 export default function FinishRide(
-    {setCompeleteRide, rideData, vehicleType}
+    {rideData, vehicleType, isWaitingForPayment, setIsWaitingForPayment}
 ) {
+
+    const handleCompleteRide = async () => {
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/rides/end`, {
+                rideId: rideData._id
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.status === 200) {
+                // Don't hide the sheet, let the rider wait for user payment
+                setIsWaitingForPayment(true);
+            }
+        } catch (error) {
+            console.error("Error ending ride:", error);
+        }
+    };
 
     return (
     <div className="absolute bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-xl z-20 p-5">
@@ -49,12 +69,19 @@ export default function FinishRide(
         </div>
       </div>
 
-      <button
-      onClick={() => {setCompeleteRide(false);}}
-      className="w-full bg-black text-white py-3 rounded-lg font-semibold"
-      >
-        Compelete Ride
-      </button>
+      {isWaitingForPayment ? (
+          <div className="w-full bg-gray-200 text-gray-700 py-4 rounded-lg font-semibold text-center flex items-center justify-center gap-2">
+            <div className="w-5 h-5 border-4 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div>
+            Waiting for User to make payment...
+          </div>
+      ) : (
+          <button
+          onClick={handleCompleteRide}
+          className="w-full bg-black text-white py-3 rounded-lg font-semibold"
+          >
+            Compelete Ride
+          </button>
+      )}
 
     </div>
   );

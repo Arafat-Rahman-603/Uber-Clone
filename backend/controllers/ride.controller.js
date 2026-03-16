@@ -224,3 +224,79 @@ export const startRideController = async (req, res) => {
   }
 };
 
+export const endRideController = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+
+    if (!rideId) {
+      return res.status(400).json({ message: "rideId is required" });
+    }
+
+    const ride = await Ride.findById(rideId).populate('user rider');
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.status !== "ongoing") {
+      return res.status(400).json({ message: "Ride is not ongoing" });
+    }
+
+    ride.status = "completed";
+    await ride.save();
+
+    // Notify user that the ride has ended
+    if (ride.user && ride.user.soketId) {
+      sendMessageToSocketId(ride.user.soketId, {
+        event: "ride-ended",
+        data: ride,
+      });
+    }
+
+    return res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error ending ride:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed to end ride" });
+    }
+  }
+};
+
+export const payRideController = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+
+    if (!rideId) {
+      return res.status(400).json({ message: "rideId is required" });
+    }
+
+    const ride = await Ride.findById(rideId).populate('user rider');
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.status !== "completed") {
+      return res.status(400).json({ message: "Ride is not completed yet" });
+    }
+
+    // You could update a payment status field here if the model supported it
+    // For now we just sync the event to the rider.
+
+    // Notify rider that the payment has been received
+    if (ride.rider && ride.rider.soketId) {
+      sendMessageToSocketId(ride.rider.soketId, {
+        event: "payment-received",
+        data: ride,
+      });
+    }
+
+    return res.status(200).json({ message: "Payment successful" });
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed to process payment" });
+    }
+  }
+};
+

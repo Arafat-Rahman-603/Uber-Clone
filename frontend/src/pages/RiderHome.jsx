@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import RiderDetails from '../components/RiderDetails';
 import RidePopUp from '../components/RidePopUp';
 import GotoPickUp from '../components/GotoPickUp';
+import LiveTracking from '../components/LiveTracking';
 import { SocketContext } from "../context/SocketContext";
 
 
@@ -14,6 +15,7 @@ export default function RiderHome() {
   const [ ridePopUp , setRidePopUp ] = useState(false);
   const [ gotoPickUp , setGotoPickUp ] = useState(false);
   const [ rideData, setRideData ] = useState(null);
+  const [ currentLocation, setCurrentLocation ] = useState(null);
 
   const userId =  JSON.parse(localStorage.getItem('rider'))._id;
 
@@ -34,6 +36,7 @@ export default function RiderHome() {
 
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
+      setCurrentLocation({ lat, lng });
 
       console.log("Sending location:", lat, lng);
                    
@@ -89,11 +92,9 @@ export default function RiderHome() {
 
       {/* MAP SECTION */}
       <div className="relative h-[65%] w-full">
-        <img
-          src="/map.png"
-          alt="map"
-          className="w-full h-full object-cover"
-        />
+        <div className="absolute inset-0 z-0">
+          <LiveTracking riderLocation={currentLocation} isRider={true} />
+        </div>
 
         {/* Uber Logo */}
         <div className="absolute top-0 w-full z-20 flex justify-between items-center p-5">
