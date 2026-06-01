@@ -36,7 +36,7 @@ The application has several routes components stored in `src/pages`. These are d
 ### 🚀 General / Landing
 * **`Start.jsx`**: The initial landing page or intro screen when a user opens the application.
 
-### 🧑‍💼 User (Passenger) Pages
+### 🧑‍💼 User (Passenger) Pages:
 * **`UserLogin.jsx`**: Authentication page for existing users to log in.
 * **`UserSignup.jsx`**: Registration page for new users to create an account.
 * **`UserLogout.jsx`**: Handles the user logout flow.
@@ -44,7 +44,7 @@ The application has several routes components stored in `src/pages`. These are d
 * **`Rideing.jsx`**: The active ride screen for the user, showing trip progress, driver details, and real-time location.
 * **`UserProtectedCom.jsx`**: A Higher-Order Component (HOC) or layout wrapper to protect routes that require user authentication.
 
-### 🚗 Rider (Driver) Pages
+### 🚗 Rider (Driver) Pages:
 * **`RiderLogin.jsx`**: Authentication page for existing drivers to log in.
 * **`RiderSignup.jsx`**: Registration page for new drivers to sign up.
 * **`RiderLogout.jsx`**: Handles the driver logout flow.
